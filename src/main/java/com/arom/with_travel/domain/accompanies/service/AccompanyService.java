@@ -6,7 +6,6 @@ import com.arom.with_travel.domain.accompanies.model.Accompany;
 import com.arom.with_travel.domain.accompanies.model.AccompanyApply;
 import com.arom.with_travel.domain.accompanies.dto.request.AccompanyPostRequest;
 import com.arom.with_travel.domain.accompanies.dto.response.AccompanyDetailsResponse;
-import com.arom.with_travel.domain.accompanies.model.Continent;
 import com.arom.with_travel.domain.accompanies.model.Country;
 import com.arom.with_travel.domain.accompanies.repository.accompany.AccompanyRepository;
 import com.arom.with_travel.domain.accompanies.repository.accompanyApply.AccompanyApplyRepository;
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +40,7 @@ public class AccompanyService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public String save(AccompanyPostRequest request, Long memberId) {
+    public String createAccompany(AccompanyPostRequest request, Long memberId) {
         Member member = loadMemberOrThrow(memberId);
         Accompany accompany = Accompany.from(request);
         accompany.post(member);
@@ -50,16 +49,18 @@ public class AccompanyService {
     }
 
     @Transactional
-    public boolean pressLike(Long accompanyId, Long memberId){
+    public void toggleLike(Long accompanyId, Long memberId){
         Member member = loadMemberOrThrow(memberId);
         Accompany accompany = loadAccompanyOrThrow(accompanyId);
-        if(accompany.isAlreadyLikedBy(memberId)) {
-            return false;
+        Optional<Likes> like = loadLikes(accompany, member);
+        if (like.isPresent()) {
+            likesRepository.delete(like.get());
+            accompany.decreaseLikeCount();
+            return;
         }
-        Likes like = Likes.init();
-        like.update(member, accompany);
-        likesRepository.save(like);
-        return true;
+        Likes newLike = Likes.create(member, accompany);
+        likesRepository.save(newLike);
+        accompany.increaseLikeCount();
     }
 
     @Transactional
@@ -74,13 +75,13 @@ public class AccompanyService {
         Accompany accompany = loadAccompanyOrThrow(accompanyId);
         Member proposer = loadMemberOrThrow(memberId);
         proposer.validateNotAlreadyAppliedTo(accompany);
-        applyRepository.save(AccompanyApply.apply(accompany, proposer));
         AccompanyAppliedEvent event = new AccompanyAppliedEvent(
                 accompany.getId(),
                 accompany.getOwnerId(),
                 proposer.getId(),
                 proposer.getNickname()
         );
+        applyRepository.save(AccompanyApply.apply(accompany, proposer));
         eventPublisher.publishEvent(event);
         return "참가 신청이 완료됐습니다.";
     }
@@ -101,17 +102,6 @@ public class AccompanyService {
     private Accompany loadAccompanyOrThrow(Long accompanyId){
         return accompanyRepository.findById(accompanyId)
                 .orElseThrow(() -> BaseException.from(ErrorCode.ACCOMPANY_NOT_FOUND));
-    }
-
-
-    private void isAlreadyApplied(Member member, Accompany accompany) {
-        member.getAccompanyApplies()
-                .stream()
-                .map(accompanyApply ->{
-                    if(accompanyApply.getAccompanies().equals(accompany))
-                        throw BaseException.from(ErrorCode.TMP_ERROR);
-                    return null;
-                });
     }
 
     //내가 등록한 동행 정보들
@@ -162,7 +152,9 @@ public class AccompanyService {
         return false;
     }
 
-
+    private Optional<Likes> loadLikes(Accompany accompany, Member member) {
+        return likesRepository.findByAccompanyAndMember(accompany, member);
+    }
 }
 
 
