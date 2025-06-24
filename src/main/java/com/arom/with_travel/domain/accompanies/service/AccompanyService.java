@@ -65,7 +65,7 @@ public class AccompanyService {
     public AccompanyDetailsResponse showDetails(Long accompanyId){
         Accompany accompany = loadAccompanyOrThrow(accompanyId);
         accompany.addView();
-        long likesCount = countLikes(accompany);
+        long likesCount = likesRepository.countByAccompanyId(accompanyId);
         return AccompanyDetailsResponse.from(accompany, likesCount);
     }
 
