@@ -1,8 +1,7 @@
-package com.arom.with_travel.domain.member.service;
+package com.arom.with_travel.domain.member.repository;
 
 import com.arom.with_travel.domain.member.Member;
 import com.arom.with_travel.domain.member.model.MemberTest;
-import com.arom.with_travel.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
 @SuppressWarnings("NonAsciiCharacters")
-public class MemberSaveServiceTest {
+public class MemberRepositoryTest {
 
     @Autowired
     private MemberRepository memberRepository;
@@ -46,4 +45,5 @@ public class MemberSaveServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getEmail()).isEqualTo(member.getEmail());
     }
+
 }
