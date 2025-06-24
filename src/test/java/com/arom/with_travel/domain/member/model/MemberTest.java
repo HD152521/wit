@@ -1,8 +1,10 @@
-package com.arom.with_travel.domain.member;
+package com.arom.with_travel.domain.member.model;
+
+import com.arom.with_travel.domain.member.Member;
 
 import java.time.LocalDate;
 
-public class createMember {
+public class MemberTest {
     public static Member 회원_생성_1(){
             return Member.builder()
                     .id(21L)
@@ -53,4 +55,5 @@ public class createMember {
                 .role(Member.Role.USER)
                 .build();
     }
+
 }
