@@ -104,54 +104,6 @@ public class AccompanyService {
                 .orElseThrow(() -> BaseException.from(ErrorCode.ACCOMPANY_NOT_FOUND));
     }
 
-    //내가 등록한 동행 정보들
-    public List<AccompanyDetailsResponse> myPostAccompany(String email, MemberProfileRequestDto requestDto){
-        Member member = memberRepository.findByEmail(email).get();
-
-        List<Accompany> accompanies = accompanyRepository.findAccompaniesByMember(member);
-        if(accompanies==null || accompanies.isEmpty()) log.warn("동행 정보 확인 불가");
-
-        List<AccompanyDetailsResponse> response = new ArrayList<>();
-        for(Accompany accompany : accompanies){
-            if(!isFinish(accompany)) response.add(AccompanyDetailsResponse.from(accompany));
-        }
-        return response;
-    }
-
-    //내가 신청한 동행 정보들
-    public List<AccompanyDetailsResponse> myApplyAccompany(String email, MemberProfileRequestDto requestDto){
-        Member member = memberRepository.findByEmail(email).get();
-        List<AccompanyApply> accompanyApplies = applyRepository.findAccompanyAppliesByMember(member);
-        List<AccompanyDetailsResponse> response = new ArrayList<>();
-        for(AccompanyApply accompanyApply : accompanyApplies){
-            if(isFinish(accompanyApply.getAccompanies())) continue;
-            response.add(AccompanyDetailsResponse.from(accompanyApply.getAccompanies()));
-        }
-        return response;
-    }
-
-    //지난 동행 정보들
-    public List<AccompanyDetailsResponse> myPastAccompany(String email, MemberProfileRequestDto requestDto){
-        Member member = memberRepository.findByEmail(email).get();
-        List<Accompany> accompanies = accompanyRepository.findAccompaniesByMember(member);
-        if(accompanies==null || accompanies.isEmpty()) log.warn("동행 정보 확인 불가");
-
-        List<AccompanyDetailsResponse> response = new ArrayList<>();
-        for(Accompany accompany : accompanies){
-            if(isFinish(accompany)) response.add(AccompanyDetailsResponse.from(accompany));
-        }
-        return response;
-    }
-
-    private boolean isFinish(Accompany accompany){
-        LocalDate endDate = accompany.getEndDate();
-        LocalDate now = LocalDate.now();
-
-        // true면 지난 동행임
-        if(now.compareTo(endDate)>0) return true;
-        return false;
-    }
-
     private Optional<Likes> loadLikes(Accompany accompany, Member member) {
         return likesRepository.findByAccompanyAndMember(accompany, member);
     }
