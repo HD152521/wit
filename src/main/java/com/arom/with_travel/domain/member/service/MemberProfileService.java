@@ -8,6 +8,7 @@ import com.arom.with_travel.domain.accompanies.repository.accompany.AccompanyApp
 import com.arom.with_travel.domain.likes.repository.LikesRepository;
 import com.arom.with_travel.domain.member.Member;
 import com.arom.with_travel.domain.member.dto.MemberProfileRequestDto;
+import com.arom.with_travel.domain.member.dto.MemberProfileResponseDto;
 import com.arom.with_travel.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ public class MemberProfileService {
     private final LikesRepository likesRepository;
 
     //내가 등록한 동행 정보들
-    public List<AccompanyDetailsResponse> myPostAccompany(String email, MemberProfileRequestDto requestDto){
+    public List<AccompanyDetailsResponse> myPostAccompany(String email){
         Member member = memberRepository.findByEmail(email).get();
 
         List<Accompany> accompanies = accompanyRepository.findAccompaniesByMember(member);
@@ -45,7 +46,7 @@ public class MemberProfileService {
     }
 
     //내가 신청한 동행 정보들
-    public List<AccompanyDetailsResponse> myApplyAccompany(String email, MemberProfileRequestDto requestDto){
+    public List<AccompanyDetailsResponse> myApplyAccompany(String email){
         Member member = memberRepository.findByEmail(email).get();
         List<AccompanyApply> accompanyApplies = applyRepository.findAccompanyAppliesByMember(member);
         List<AccompanyDetailsResponse> response = new ArrayList<>();
@@ -60,7 +61,7 @@ public class MemberProfileService {
     }
 
     //지난 동행 정보들
-    public List<AccompanyDetailsResponse> myPastAccompany(String email, MemberProfileRequestDto requestDto){
+    public List<AccompanyDetailsResponse> myPastAccompany(String email){
         Member member = memberRepository.findByEmail(email).get();
         List<Accompany> accompanies = accompanyRepository.findAccompaniesByMember(member);
         if(accompanies==null || accompanies.isEmpty()) log.warn("동행 정보 확인 불가");
@@ -82,5 +83,15 @@ public class MemberProfileService {
         // true면 지난 동행임
         if(now.compareTo(endDate)>0) return true;
         return false;
+    }
+
+    public MemberProfileResponseDto getProfile(String email){
+        Member member = memberRepository.findByEmail(email).get();
+        return MemberProfileResponseDto.from(member);
+    }
+
+    public String getIntroduction(String email){
+        Member member = memberRepository.findByEmail(email).get();
+        return member.getIntroduction();
     }
 }
